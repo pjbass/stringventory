@@ -1,0 +1,19 @@
+name: stringventory
+version: 0.1.0
+
+authors:
+  - PJ <pj@notanemail.com>
+
+targets:
+  stringventory:
+    main: src/stringventory.cr
+
+crystal: 1.1.1
+
+dependencies:
+  granite:
+    github: amberframework/granite
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
+
+license: MIT
