@@ -9,6 +9,9 @@ module Stringventory::Models
     connection con
     table strings
 
+    # Instances where the strings have been used in a string change.
+    has_many :string_changes, class_name: StringChange
+
     # Primary key for the table. Not used otherwise.
     column id : Int64, primary: true
 
