@@ -180,7 +180,10 @@ module Stringventory
 
     validate_name(options, help_message, comm)
 
-    gtrs = Actions::Guitars.process_action(act: comm, opts: options)
+    gtrs = Actions::Guitars.process_action(act: comm,
+                                           name: options[:name].to_s,
+                                           num_strs: options[:num_strs].to_i32,
+                                           str_name: options[:str_name].to_s)
 
     print_output act: comm, res: "guitars", outp: gtrs
 
@@ -188,7 +191,10 @@ module Stringventory
 
     validate_name(options, help_message, comm)
 
-    packs = Actions::Strings.process_action(act: comm, opts: options)
+    packs = Actions::Strings.process_action(act: comm,
+                                            name: options[:name].to_s,
+                                            num_strs: options[:num_strs].to_i32,
+                                            num_packs: options[:num_packs].to_i32)
 
     print_output act: comm, res: "string packs", outp: packs
 

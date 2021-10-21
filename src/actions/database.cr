@@ -15,13 +15,11 @@ module Stringventory::Actions::Database
           Models::StringChange.migrator.create
           "Database successfully created!"
       when StrVAction::Update
-        begin
           Models::Guitar.migrator.drop_and_create
           Models::Strings.migrator.drop_and_create
           Models::StringChange.migrator.drop_and_create
           "Database dropped and recreated!"
       when StrVAction::Delete
-        begin
           Models::Guitar.migrator.drop
           Models::Strings.migrator.drop
           Models::StringChange.migrator.drop
