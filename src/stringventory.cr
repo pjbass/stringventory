@@ -64,6 +64,7 @@ end
 # as the leading / from ENV["HOME"] will get dropped.
 db_url = File.join("sqlite3:///", ENV["HOME"], ".local", "share", "stringventory.db")
 db_file : String? = nil
+db_drop = true
 sub_c = Stringventory::StrVResource::None
 comm = Stringventory::StrVAction::None
 
@@ -159,7 +160,7 @@ parser = OptionParser.new do |parser|
     end
 
     parser.on("used", "Remove strings from the current stock outside of a string change") do
-      comm = Stringventory::StrVAction::StringChange
+      comm = Stringventory::StrVAction::Update
 
       # Set this as the default, in case no additional amount is provided.
       options[:num_packs] = -1
@@ -189,6 +190,12 @@ parser = OptionParser.new do |parser|
     parser.on("update", "Drop and recreate the database, with an optional yml file to repopulate it.") do
       comm = Stringventory::StrVAction::Update
       parser.on("-f FNAME", "--file=FNAME", "File to load the database from (default=none)") { |fnm| db_file = fnm }
+      db_drop = true
+    end
+    parser.on("load", "Load items from a file into the database") do
+      comm = Stringventory::StrVAction::Update
+      parser.on("-f FNAME", "--file=FNAME", "File to load the database entries from (Required)") { |fnm| db_file = fnm }
+      db_drop = false
     end
     parser.on("dump", "Dump the database as a yaml file") do
       comm = Stringventory::StrVAction::List
@@ -239,7 +246,7 @@ when Stringventory::StrVResource::Strings
   Stringventory.print_output act: comm, res: "string packs", outp: packs
 
 when Stringventory::StrVResource::Database
-  res = Stringventory::Actions::Database.process_action(comm, db_file)
+  res = Stringventory::Actions::Database.process_action(comm, db_file, db_drop)
 
   case res
   when String

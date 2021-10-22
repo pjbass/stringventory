@@ -14,7 +14,6 @@ module Stringventory
     Create
     Delete
     Update
-    StringChange
     List
     None
   end
