@@ -15,6 +15,15 @@ module Stringventory::Actions::Strings
       pack.save
 
       ret = [pack]
+    when StrVAction::Delete
+
+      pack = Models::Strings.find_by name: name
+
+      if pack
+        pack.destroy
+        ret = [pack]
+      end
+
     when StrVAction::List
       if name.empty?
         packs = Models::Strings.all
@@ -32,12 +41,8 @@ module Stringventory::Actions::Strings
       pack = Models::Strings.find_by name: name
 
       if pack
-        if pack.num_packs + num_packs > 0
-          pack.num_packs += num_packs
-          pack.save
-        else
-          pack.errors << Granite::Error.new field: :num_packs, message: "The number of packs must be greater than or equal to 0"
-        end
+        pack.num_packs += num_packs
+        pack.save
         ret = [pack]
       end
 
