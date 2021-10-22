@@ -15,7 +15,7 @@ module Stringventory::Actions::Guitars
 
       # Both should be set. Validations on the model itself should handle the
       # permissible values.
-      gtr = Models::Guitar.new name: name, num_strings: num_strs
+      gtr = Models::Guitar.create name: name, num_strings: num_strs
       gtr.save
 
       ret = [gtr]
@@ -28,6 +28,34 @@ module Stringventory::Actions::Guitars
       else
         gtr = Models::Guitar.find_by name: name
         ret = [gtr] if gtr
+      end
+
+    when StrVAction::StringChange
+
+      gtr = Models::Guitar.find_by name: name
+
+      if gtr
+
+        ret = [gtr]
+
+        pack = Actions::Strings.process_action act, name: str_name, num_packs: 1
+
+        if pack.empty?
+          gtr.errors << Granite::Error.new field: :str_name, message: "Strings not found"
+
+        elsif !pack[0].errors.empty?
+          gtr.errors << pack[0].errors[0]
+
+        else
+
+          sc = Models::StringChange.create guitar_id: gtr.id, strings_id: pack[0].id
+          sc.save
+
+          if !sc.errors.empty?
+            gtr.errors << sc.errors[0]
+          end
+        end
+
       end
 
     when StrVAction::Delete
