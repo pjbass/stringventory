@@ -4,6 +4,7 @@ module Stringventory
   enum StrVResource
     Guitar
     Strings
+    StringChange
     Database
     None
   end

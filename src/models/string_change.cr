@@ -21,5 +21,11 @@ module Stringventory::Models
 
     timestamps
 
+    def to_s
+
+      "Restrung #{guitar.name} with #{strings.name} at #{@created_at.to_s}"
+
+    end
+
   end
 end

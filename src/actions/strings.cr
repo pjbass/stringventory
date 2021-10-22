@@ -32,11 +32,7 @@ module Stringventory::Actions::Strings
         pack = Models::Strings.find_by name: name
         ret = [pack] if pack
       end
-    when StrVAction::Update, StrVAction::StringChange
-
-      if act == StrVAction::StringChange
-        num_packs = -num_packs
-      end
+    when StrVAction::Update
 
       pack = Models::Strings.find_by name: name
 
