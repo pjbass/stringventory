@@ -44,14 +44,14 @@ module Stringventory
   def self.print_output(act : StrVAction, res : String, outp : Array(Granite::Base))
     if !outp.empty?
       outp.each do |itm|
-        if act == StrVAction::List
+        if !itm.errors.empty?
+          puts itm.errors[0].message.to_s
+        elsif res == "sc"
+          puts itm.to_s
+        elsif act == StrVAction::List
           puts itm.to_yaml
         else
-          if itm.errors.empty?
-            puts "#{act.to_s}d #{itm.to_s}"
-          else
-            puts itm.errors[0].message.to_s
-          end
+          puts "#{act.to_s}d #{itm.to_s}"
         end
       end
     else
@@ -65,6 +65,7 @@ end
 db_url = File.join("sqlite3:///", ENV["HOME"], ".local", "share", "stringventory.db")
 db_file : String? = nil
 db_drop = true
+msg : String? = nil
 sub_c = Stringventory::StrVResource::None
 comm = Stringventory::StrVAction::None
 
@@ -121,6 +122,7 @@ parser = OptionParser.new do |parser|
       # Have to set the resource to Guitar so it displays correctly.
       Stringventory.common_opts(parser, Stringventory::StrVResource::Guitar, options, strings: false)
       parser.on("-r STRS", "--restring-with=STRS", "Strings to restring the guitar with") { |strs| options[:str_name] = strs }
+      parser.on("-m MSG", "--message=MSG", "Optional message to associate with the string change") { |mssg| msg = mssg }
       help_message = parser.to_s
     end
 
@@ -244,6 +246,21 @@ when Stringventory::StrVResource::Strings
                                           num_packs: options[:num_packs].to_i32)
 
   Stringventory.print_output act: comm, res: "string packs", outp: packs
+
+when Stringventory::StrVResource::StringChange
+  Stringventory.validate_name(options, help_message, comm)
+
+  begin
+    chngs = Stringventory::Actions::StringChanges.process_action(act: comm,
+                                                                 gtr_name: options[:name].to_s,
+                                                                 str_name: options[:str_name].to_s,
+                                                                 msg: msg)
+  rescue e : Exception
+    STDERR.puts e.message
+    exit 6
+  end
+
+  Stringventory.print_output act: comm, res: "sc", outp: chngs
 
 when Stringventory::StrVResource::Database
   res = Stringventory::Actions::Database.process_action(comm, db_file, db_drop)

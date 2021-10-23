@@ -6,7 +6,7 @@ require "../models/*"
 module Stringventory::Actions::Guitars
 
   # Method to process actions
-  def self.process_action(act : StrVAction, name = "", num_strs = 6, str_name = "", msg : String? = nil) : Array(Models::Guitar)
+  def self.process_action(act : StrVAction, name = "", num_strs = 6, str_name = "") : Array(Models::Guitar)
 
     ret = [] of Models::Guitar
 
