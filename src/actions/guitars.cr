@@ -6,7 +6,7 @@ require "../models/*"
 module Stringventory::Actions::Guitars
 
   # Method to process actions
-  def self.process_action(act : StrVAction, name = "", num_strs = 6, str_name = "") : Array(Models::Guitar)
+  def self.process_action(act : StrVAction, name = "", num_strs = 6, str_name = "", dt = Time.local) : Array(Models::Guitar)
 
     ret = [] of Models::Guitar
 
@@ -15,7 +15,7 @@ module Stringventory::Actions::Guitars
 
       # Both should be set. Validations on the model itself should handle the
       # permissible values.
-      gtr = Models::Guitar.create name: name, num_strings: num_strs
+      gtr = Models::Guitar.create name: name, num_strings: num_strs, bought_on: dt
       gtr.save
 
       ret = [gtr]

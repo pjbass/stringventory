@@ -12,6 +12,9 @@ module Stringventory::Models
     # Primary key for the table. Not used otherwise.
     column id : Int64, primary: true
 
+    # When the string change occured. Defaults to the current time.
+    column occurred_on : Time = Time.local
+
     # Optional message regarding a string change (maybe something dealing with
     # pickups or setups, something like that).
     column message : String?
@@ -19,11 +22,10 @@ module Stringventory::Models
     belongs_to :guitar
     belongs_to :strings
 
-    timestamps
-
     def to_s
 
-      "Restrung #{guitar.name} with #{strings.name} at #{@created_at.to_s}"
+      dt = @occurred_on.as(Time).to_s "%d/%m/%Y"
+      "Restrung #{guitar.name} with #{strings.name} on #{dt}"
 
     end
 

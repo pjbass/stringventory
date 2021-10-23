@@ -7,16 +7,16 @@ module Stringventory
   VERSION = "0.1.0"
 
   # Function to add common options to the add and update subcommands.
-  def self.common_opts(parser : OptionParser, res : StrVResource, opts : Hash(Symbol, Int|String), strings = true, packs = true, pack_mod = 1)
+  def self.common_opts(parser : OptionParser, res : StrVResource, opts : Hash(Symbol, Int|String), strings? = true, packs? = true, time? = true, pack_mod = 1)
     r = res.to_s.downcase
 
-    if strings
+    if strings?
       parser.on("-s NUM", "--strings=NUM", "Specify the number of strings") { |n| opts[:num_strs] = n.to_i32 }
     end
 
     parser.on("-n NAME", "--name=NAME", "Name of the #{r}") { |nm| opts[:name] = nm }
 
-    if res == StrVResource::Strings && packs == true
+    if res == StrVResource::Strings && packs? == true
       parser.on("-p NUM", "--num-packs=NUM", "Number of packs to add (default = #{pack_mod * opts[:num_packs].to_i32})") do |pks|
         if pks.to_i32 > 0
           opts[:num_packs] = pack_mod * pks.to_i32
@@ -58,6 +58,40 @@ module Stringventory
       puts "No #{res} found!"
     end
   end
+
+  def self.add_time(parser : OptionParser, res : StrVResource, opts : Hash(Symbol,Int|String))
+
+    short = "-b DMY"
+    long = "--bought=DMY"
+    help_msg = "Date the guitar was bought/delivered on."
+
+    if res == StrVResource::StringChange
+      short = "-t DMY"
+      long = "--time=DMY"
+      help_msg = "Date the string change occurred on."
+    end
+
+    help_msg += " Format = d/m/y. Default = now"
+
+    parser.on(short, long, help_msg) { |tm| opts[:date] = tm }
+  end
+
+  def self.parse_time(tstr : String, help_msg : String) : Time
+
+    if tstr.empty?
+      Time.local
+    else
+      begin
+        Time.parse_local tstr, "%d/%m/%Y"
+      rescue e
+        STDERR.puts help_msg
+        STDERR.puts e.message
+        exit 7
+      end
+    end
+
+  end
+
 end
 
 # For this default, this needs to have 3 /'s on the sqlite protocol portion,
@@ -74,6 +108,7 @@ options = {
   :name => "",
   :str_name => "",
   :num_packs => 1,
+  :date => "",
 }
 
 # Save the help message if it's needed later.
@@ -92,6 +127,7 @@ parser = OptionParser.new do |parser|
     parser.on("add", "Add a new guitar") do
       comm = Stringventory::StrVAction::Create
       Stringventory.common_opts(parser, sub_c, options)
+      Stringventory.add_time(parser, Stringventory::StrVResource::Guitar, options)
       help_message = parser.to_s
     end
 
@@ -99,12 +135,12 @@ parser = OptionParser.new do |parser|
 
     parser.on("remove", "Remove a guitar") do
       comm = Stringventory::StrVAction::Delete
-      Stringventory.common_opts(parser, sub_c, options, strings: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false)
       help_message = parser.to_s
     end
     parser.on("list", "List guitars") do
       comm = Stringventory::StrVAction::List
-      Stringventory.common_opts(parser, sub_c, options, strings: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false)
 
       # This one should never fail due to missing name
     end
@@ -120,15 +156,17 @@ parser = OptionParser.new do |parser|
       comm = Stringventory::StrVAction::Create
 
       # Have to set the resource to Guitar so it displays correctly.
-      Stringventory.common_opts(parser, Stringventory::StrVResource::Guitar, options, strings: false)
+      Stringventory.common_opts(parser, Stringventory::StrVResource::Guitar, options, strings?: false)
       parser.on("-r STRS", "--restring-with=STRS", "Strings to restring the guitar with") { |strs| options[:str_name] = strs }
       parser.on("-m MSG", "--message=MSG", "Optional message to associate with the string change") { |mssg| msg = mssg }
+      Stringventory.add_time(parser, Stringventory::StrVResource::StringChange, options)
+
       help_message = parser.to_s
     end
 
     parser.on("list", "List string changes") do
       comm = Stringventory::StrVAction::List
-      Stringventory.common_opts(parser, sub_c, options, strings: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false)
       parser.on("-r STRS", "--by-strings=STRS", "Search for changes by string.") { |strs| options[:str_name] = strs }
       help_message = parser.to_s
     end
@@ -151,13 +189,13 @@ parser = OptionParser.new do |parser|
     parser.on("remove", "Remove a string set") do
       comm = Stringventory::StrVAction::Delete
 
-      Stringventory.common_opts(parser, sub_c, options, strings: false, packs: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false, packs?: false)
 
       help_message = parser.to_s
     end
     parser.on("bought", "Add strings to the current stock") do
       comm = Stringventory::StrVAction::Update
-      Stringventory.common_opts(parser, sub_c, options, strings: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false)
       help_message = parser.to_s
     end
 
@@ -167,13 +205,13 @@ parser = OptionParser.new do |parser|
       # Set this as the default, in case no additional amount is provided.
       options[:num_packs] = -1
 
-      Stringventory.common_opts(parser, sub_c, options, strings: false, pack_mod: -1)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false, pack_mod: -1)
       help_message = parser.to_s
     end
 
     parser.on("list", "List string packs") do
       comm = Stringventory::StrVAction::List
-      Stringventory.common_opts(parser, sub_c, options, strings: false, packs: false)
+      Stringventory.common_opts(parser, sub_c, options, strings?: false, packs?: false)
       help_message = parser.to_s
     end
 
@@ -229,10 +267,13 @@ when Stringventory::StrVResource::Guitar
 
   Stringventory.validate_name(options, help_message, comm)
 
+  dt = Stringventory.parse_time options[:date].to_s, help_message
+
   gtrs = Stringventory::Actions::Guitars.process_action(act: comm,
-                                          name: options[:name].to_s,
-                                          num_strs: options[:num_strs].to_i32,
-                                          str_name: options[:str_name].to_s)
+                                                        name: options[:name].to_s,
+                                                        num_strs: options[:num_strs].to_i32,
+                                                        str_name: options[:str_name].to_s,
+                                                        dt: dt)
 
   Stringventory.print_output act: comm, res: "guitars", outp: gtrs
 
@@ -249,12 +290,14 @@ when Stringventory::StrVResource::Strings
 
 when Stringventory::StrVResource::StringChange
   Stringventory.validate_name(options, help_message, comm)
+  dt = Stringventory.parse_time options[:date].to_s, help_message
 
   begin
     chngs = Stringventory::Actions::StringChanges.process_action(act: comm,
                                                                  gtr_name: options[:name].to_s,
                                                                  str_name: options[:str_name].to_s,
-                                                                 msg: msg)
+                                                                 msg: msg,
+                                                                 dt: dt)
   rescue e : Exception
     STDERR.puts e.message
     exit 6

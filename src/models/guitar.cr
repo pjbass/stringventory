@@ -21,6 +21,10 @@ module Stringventory::Models
     # Number of strings on the guitar. Defaults to 6
     column num_strings : Int32 = 6
 
+    # When the guitar was bought or delivered, distinct from when the
+    # database object was created or updated.
+    column bought_on : Time = Time.local
+
     # Timestamps for the creation and latest update
     timestamps
 
