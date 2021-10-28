@@ -49,11 +49,11 @@ module Stringventory::Actions::Database
   end
 
   # Method to process actions
-  def self.process_action(act : StrVAction, db_file : String?, db_drop = true) : Exception|String|Nil
+  def self.process_action(act : Action, db_file : String?, db_drop = true) : Exception|String|Nil
 
     begin
       case act
-      when StrVAction::Create
+      when Action::Create
         Models::Guitar.migrator.create
         Models::Strings.migrator.create
         Models::StringChange.migrator.create
@@ -64,7 +64,7 @@ module Stringventory::Actions::Database
         end
 
         "Database successfully created!"
-      when StrVAction::Update
+      when Action::Update
         if db_drop
           Models::Guitar.migrator.drop_and_create
           Models::Strings.migrator.drop_and_create
@@ -91,12 +91,12 @@ module Stringventory::Actions::Database
 
         end
 
-      when StrVAction::Delete
+      when Action::Delete
         Models::Guitar.migrator.drop
         Models::Strings.migrator.drop
         Models::StringChange.migrator.drop
         "Database dropped!"
-      when StrVAction::List
+      when Action::List
         ret = DataScheme.new().to_yaml
         if !db_file.nil?
           File.write db_file, ret

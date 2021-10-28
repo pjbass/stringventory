@@ -1,7 +1,7 @@
 module Stringventory
 
   # Enum defining the resource to perform an action on.
-  enum StrVResource
+  enum Resource
     Guitar
     Strings
     StringChange
@@ -10,7 +10,7 @@ module Stringventory
   end
 
   # Enum defining the action to take on a particular resource.
-  enum StrVAction
+  enum Action
     Create
     Delete
     Update

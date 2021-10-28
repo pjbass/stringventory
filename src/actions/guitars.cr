@@ -6,12 +6,12 @@ require "../models/*"
 module Stringventory::Actions::Guitars
 
   # Method to process actions
-  def self.process_action(act : StrVAction, name = "", num_strs = 6, str_name = "", dt = Time.local) : Array(Models::Guitar)
+  def self.process_action(act : Action, name = "", num_strs = 6, str_name = "", dt = Time.local) : Array(Models::Guitar)
 
     ret = [] of Models::Guitar
 
     case act
-    when StrVAction::Create
+    when Action::Create
 
       # Both should be set. Validations on the model itself should handle the
       # permissible values.
@@ -20,7 +20,7 @@ module Stringventory::Actions::Guitars
 
       ret = [gtr]
 
-    when StrVAction::List
+    when Action::List
 
       if name.empty?
         gtrs = Models::Guitar.all
@@ -30,7 +30,7 @@ module Stringventory::Actions::Guitars
         ret = [gtr] if gtr
       end
 
-    when StrVAction::Delete
+    when Action::Delete
 
       gtr = Models::Guitar.find_by name: name
 

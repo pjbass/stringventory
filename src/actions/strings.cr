@@ -5,17 +5,17 @@ require "../models/*"
 module Stringventory::Actions::Strings
 
   # Method to process actions
-  def self.process_action(act : StrVAction, name = "", num_strs = 6, num_packs = 1) : Array(Models::Strings)
+  def self.process_action(act : Action, name = "", num_strs = 6, num_packs = 1) : Array(Models::Strings)
 
     ret = [] of Models::Strings
 
     case act
-    when StrVAction::Create
+    when Action::Create
       pack = Models::Strings.new name: name, num_strings: num_strs, num_packs: num_packs
       pack.save
 
       ret = [pack]
-    when StrVAction::Delete
+    when Action::Delete
 
       pack = Models::Strings.find_by name: name
 
@@ -24,7 +24,7 @@ module Stringventory::Actions::Strings
         ret = [pack]
       end
 
-    when StrVAction::List
+    when Action::List
       if name.empty?
         packs = Models::Strings.all
         ret = packs.to_a if packs
@@ -32,7 +32,7 @@ module Stringventory::Actions::Strings
         pack = Models::Strings.find_by name: name
         ret = [pack] if pack
       end
-    when StrVAction::Update
+    when Action::Update
 
       pack = Models::Strings.find_by name: name
 

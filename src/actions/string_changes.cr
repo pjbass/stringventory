@@ -1,18 +1,18 @@
 module Stringventory::Actions::StringChanges
 
   # Method to process actions
-  def self.process_action(act : StrVAction, gtr_name = "", str_name = "", msg : String? = nil, dt = Time.local) : Array(Models::StringChange)
+  def self.process_action(act : Action, gtr_name = "", str_name = "", msg : String? = nil, dt = Time.local) : Array(Models::StringChange)
 
     ret = [] of Models::StringChange
 
     case act
-    when StrVAction::Create
+    when Action::Create
 
       gtr = Models::Guitar.find_by name: gtr_name
 
       if gtr
 
-        pack = Actions::Strings.process_action StrVAction::Update, name: str_name, num_packs: -1
+        pack = Actions::Strings.process_action Action::Update, name: str_name, num_packs: -1
 
         if pack.empty?
           raise ArgumentError.new "Strings #{str_name} not found"
@@ -32,7 +32,7 @@ module Stringventory::Actions::StringChanges
         raise ArgumentError.new "Guitar #{gtr_name} not found!"
       end
 
-    when StrVAction::List
+    when Action::List
 
       if gtr_name.empty? && str_name.empty?
         ret = Models::StringChange.order(:guitar_id).select().to_a
