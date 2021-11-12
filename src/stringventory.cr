@@ -46,16 +46,22 @@ module Stringventory
       outp.each do |itm|
         if !itm.errors.empty?
           puts itm.errors[0].message.to_s
-        elsif res == "sc"
-          puts itm.to_s
         elsif act == Action::List
-          puts itm.to_yaml
+          puts itm.to_s
         else
           puts "#{act.to_s}d #{itm.to_s}"
         end
       end
     else
       puts "No #{res} found!"
+    end
+  end
+
+  def self.print_changes(guitars : Array(Models::Guitar), cutoff : Time? = nil)
+    if cutoff.nil?
+
+    else
+      puts "Work in progress!"
     end
   end
 

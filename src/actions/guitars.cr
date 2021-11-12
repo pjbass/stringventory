@@ -24,7 +24,20 @@ module Stringventory::Actions::Guitars
 
       if name.empty?
         gtrs = Models::Guitar.all
-        ret = gtrs.to_a if gtrs
+        ret = gtrs.to_a.sort_by do |gtr|
+
+          tm = Time::UNIX_EPOCH
+
+          gtr.string_changes.each do |sc|
+            if sc.occurred_on > tm
+              tm = sc.occurred_on
+            end
+          end
+
+          tm
+
+        end
+
       else
         gtr = Models::Guitar.find_by name: name
         ret = [gtr] if gtr

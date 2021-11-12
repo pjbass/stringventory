@@ -36,11 +36,37 @@ module Stringventory::Models
     # with weird Chapman stick type guitars.
     validate_less_than :num_strings, 50
 
+    def last_change : StringChange?
+
+      tm = Time::UNIX_EPOCH
+      ch = nil
+
+      string_changes.each do |sc|
+        if sc.occurred_on > tm
+          tm = sc.occurred_on
+          ch = sc
+        end
+      end
+
+      ch
+
+    end
+
     # To string method that returns a reasonable string representation of the
     # guitar.
-    def to_s
+    def to_s : String
 
-      return "#{@name} (#{@num_strings} string)"
+      bght = @bought_on.as(Time).to_s "%d/%m/%Y"
+      sc = last_change
+      tm = "Never"
+      if !sc.nil?
+        tm = sc.occurred_on.as(Time).to_s "%d/%m/%Y"
+      end
+
+      return "#{@name}\n"\
+        "  strings: #{@num_strings}\n"\
+        "  bought on: #{bght}\n"\
+        "  last string change: #{tm}"
 
     end
 

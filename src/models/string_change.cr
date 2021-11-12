@@ -25,7 +25,13 @@ module Stringventory::Models
     def to_s
 
       dt = @occurred_on.as(Time).to_s "%d/%m/%Y"
-      "Restrung #{guitar.name} with #{strings.name} on #{dt}"
+
+      msg = ""
+      if !@message.nil?
+        msg = "\n  #{@message}"
+      end
+
+      "Restrung #{guitar.name} with #{strings.name} on #{dt}#{msg}"
 
     end
 
