@@ -29,8 +29,8 @@ module Stringventory::Actions::Strings
         packs = Models::Strings.all
         ret = packs.to_a if packs
       else
-        pack = Models::Strings.find_by name: name
-        ret = [pack] if pack
+        pack = Models::Strings.where(:name, :like, "%#{name}%").select
+        ret = pack if pack
       end
     when Action::Update
 

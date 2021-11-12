@@ -4,7 +4,7 @@ require "sqlite3"
 # `Stringventory` A small command line application designed to keep an
 # inventory of guitars and strings.
 module Stringventory
-  VERSION = "1.0.0"
+  VERSION = "1.1.0"
 
   # Function to add common options to the add and update subcommands.
   def self.common_opts(parser : OptionParser, res : Resource, opts : Hash(Symbol, Int|String), strings? = true, packs? = true, time? = true, pack_mod = 1)

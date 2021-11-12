@@ -39,8 +39,8 @@ module Stringventory::Actions::Guitars
         end
 
       else
-        gtr = Models::Guitar.find_by name: name
-        ret = [gtr] if gtr
+        gtr = Models::Guitar.where(:name, :like, "%#{name}%").select
+        ret = gtr if gtr
       end
 
     when Action::Delete
