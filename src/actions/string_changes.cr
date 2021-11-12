@@ -1,7 +1,7 @@
 module Stringventory::Actions::StringChanges
 
   # Method to process actions
-  def self.process_action(act : Action, gtr_name = "", str_name = "", msg : String? = nil, dt = Time.local) : Array(Models::StringChange)
+  def self.process_action(act : Action, gtr_name = "", str_name = "", msg : String? = nil, dt = Time.local, tuning = "Standard") : Array(Models::StringChange)
 
     ret = [] of Models::StringChange
 
@@ -22,7 +22,7 @@ module Stringventory::Actions::StringChanges
 
         else
 
-          sc = Models::StringChange.create guitar_id: gtr.id, strings_id: pack[0].id, message: msg, occurred_on: dt
+          sc = Models::StringChange.create guitar_id: gtr.id, strings_id: pack[0].id, message: msg, occurred_on: dt, tuning: tuning
           sc.save
 
           ret = [sc]

@@ -15,6 +15,10 @@ module Stringventory::Models
     # When the string change occured. Defaults to the current time.
     column occurred_on : Time = Time.local
 
+    # Tuning that the guitar is strung to. Defaults to Standard, whatever that
+    # may mean for the guitar.
+    column tuning : String = "Standard"
+
     # Optional message regarding a string change (maybe something dealing with
     # pickups or setups, something like that).
     column message : String?
@@ -31,7 +35,7 @@ module Stringventory::Models
         msg = "\n  #{@message}"
       end
 
-      "Restrung #{guitar.name} with #{strings.name} on #{dt}#{msg}"
+      "Restrung #{guitar.name} with #{strings.name} on #{dt}. Tuned to #{@tuning}.#{msg}"
 
     end
 

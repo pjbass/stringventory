@@ -72,8 +72,8 @@ module Stringventory
     help_msg = "Date the guitar was bought/delivered on."
 
     if res == Resource::StringChange
-      short = "-t DMY"
-      long = "--time=DMY"
+      short = "-d DMY"
+      long = "--date=DMY"
       help_msg = "Date the string change occurred on."
     end
 
@@ -115,6 +115,7 @@ options = {
   :str_name => "",
   :num_packs => 1,
   :date => "",
+  :tuning => "Standard",
 }
 
 # Save the help message if it's needed later.
@@ -166,6 +167,7 @@ parser = OptionParser.new do |parser|
       parser.on("-r STRS", "--restring-with=STRS", "Strings to restring the guitar with") { |strs| options[:str_name] = strs }
       parser.on("-m MSG", "--message=MSG", "Optional message to associate with the string change") { |mssg| msg = mssg }
       Stringventory.add_time(parser, Stringventory::Resource::StringChange, options)
+      parser.on("-t TNG", "--tuning=TNG", "Tuning that the guitar is strung to. Defaults to Standard") { |tng| options[:tuning] = tng }
 
       help_message = parser.to_s
     end
@@ -303,7 +305,8 @@ when Stringventory::Resource::StringChange
                                                                  gtr_name: options[:name].to_s,
                                                                  str_name: options[:str_name].to_s,
                                                                  msg: msg,
-                                                                 dt: dt)
+                                                                 dt: dt,
+                                                                 tuning: options[:tuning].to_s)
   rescue e : Exception
     STDERR.puts e.message
     exit 6
