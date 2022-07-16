@@ -4,7 +4,7 @@ require "granite/adapter/sqlite"
 
 module Stringventory::Models
 
-  # Class representing a set of strings.
+  # Class representing a string change.
   class StringChange < Granite::Base
     connection con
     table string_changes

@@ -8,10 +8,14 @@ module Stringventory::Actions::StringChanges
     case act
     when Action::Create
 
+      # Create a new string change. Have to be able to find the guitar and the
+      # strings for this to go through.
       gtr = Models::Guitar.find_by name: gtr_name
 
       if gtr
 
+        # Decrement the number of packs, since it's being used to restring the
+        # guitar.
         pack = Actions::Strings.process_action Action::Update, name: str_name, num_packs: -1
 
         if pack.empty?
@@ -34,6 +38,8 @@ module Stringventory::Actions::StringChanges
 
     when Action::List
 
+      # List all string changes, list string changes by guitar, or list string
+      # changes by strings used.
       if gtr_name.empty? && str_name.empty?
         ret = Models::StringChange.order(:guitar_id).select().to_a
       elsif !gtr_name.empty?

@@ -24,9 +24,6 @@ module Stringventory::Models
     # Number of packs currently in stock.
     column num_packs : Int32 = 0
 
-    # Timestamps for the creation and latest update
-    timestamps
-
     validate_uniqueness :name
     validate_not_blank :name
     validate_greater_than :num_strings, 0

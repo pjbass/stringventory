@@ -25,9 +25,6 @@ module Stringventory::Models
     # database object was created or updated.
     column bought_on : Time = Time.local
 
-    # Timestamps for the creation and latest update
-    timestamps
-
     validate_uniqueness :name
     validate_not_blank :name
     validate_greater_than :num_strings, 0

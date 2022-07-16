@@ -32,9 +32,8 @@ module Stringventory
 
   # Function to validate the name field and ensure that it is not empty. Displays
   # help_msg and exits if validation fails.
-  def self.validate_name(opts : Hash(Symbol,Int|String), help_msg : String, act : Action)
+  def self.validate_name(opts : Hash(Symbol,Int|String), act : Action)
     if act != Action::List && opts[:name].to_s.empty?
-      STDERR.puts help_msg
       STDERR.puts "Name must be set!"
       exit 3
     end
@@ -57,14 +56,6 @@ module Stringventory
     end
   end
 
-  def self.print_changes(guitars : Array(Models::Guitar), cutoff : Time? = nil)
-    if cutoff.nil?
-
-    else
-      puts "Work in progress!"
-    end
-  end
-
   def self.add_time(parser : OptionParser, res : Resource, opts : Hash(Symbol,Int|String))
 
     short = "-b DMY"
@@ -82,7 +73,7 @@ module Stringventory
     parser.on(short, long, help_msg) { |tm| opts[:date] = tm }
   end
 
-  def self.parse_time(tstr : String, help_msg : String) : Time
+  def self.parse_time(tstr : String) : Time
 
     if tstr.empty?
       Time.local
@@ -90,7 +81,7 @@ module Stringventory
       begin
         Time.parse_local tstr, "%d/%m/%Y"
       rescue e
-        STDERR.puts help_msg
+        STDERR.puts "Unable to parse time:"
         STDERR.puts e.message
         exit 7
       end
@@ -118,14 +109,23 @@ options = {
   :tuning => "Standard",
 }
 
-# Save the help message if it's needed later.
-help_message = ""
-
 parser = OptionParser.new do |parser|
 
   parser.banner = "Usage: stringventory [options] [command] [arguments]"
 
   parser.on("-d PATH", "--database=PATH", "Specify the database path (default = #{db_url})") { |pth| db_url = pth }
+
+  parser.missing_option do |opt|
+    STDERR.puts parser
+    STDERR.puts "Option #{opt} missing value."
+    exit 1
+  end
+
+  parser.invalid_option do |opt|
+    STDERR.puts parser
+    STDERR.puts "Invalid option: #{opt}."
+    exit 2
+  end
 
   parser.on("guitars", "Manage guitars") do
     sub_c = Stringventory::Resource::Guitar
@@ -135,7 +135,6 @@ parser = OptionParser.new do |parser|
       comm = Stringventory::Action::Create
       Stringventory.common_opts(parser, sub_c, options)
       Stringventory.add_time(parser, Stringventory::Resource::Guitar, options)
-      help_message = parser.to_s
     end
 
     # No update method, since it doesn't make _that_ much sense.
@@ -143,7 +142,6 @@ parser = OptionParser.new do |parser|
     parser.on("remove", "Remove a guitar") do
       comm = Stringventory::Action::Delete
       Stringventory.common_opts(parser, sub_c, options, strings?: false)
-      help_message = parser.to_s
     end
     parser.on("list", "List guitars") do
       comm = Stringventory::Action::List
@@ -169,14 +167,12 @@ parser = OptionParser.new do |parser|
       Stringventory.add_time(parser, Stringventory::Resource::StringChange, options)
       parser.on("-t TNG", "--tuning=TNG", "Tuning that the guitar is strung to. Defaults to Standard") { |tng| options[:tuning] = tng }
 
-      help_message = parser.to_s
     end
 
     parser.on("list", "List string changes") do
       comm = Stringventory::Action::List
       Stringventory.common_opts(parser, sub_c, options, strings?: false)
       parser.on("-r STRS", "--by-strings=STRS", "Search for changes by string.") { |strs| options[:str_name] = strs }
-      help_message = parser.to_s
     end
 
   end
@@ -185,21 +181,17 @@ parser = OptionParser.new do |parser|
     sub_c = Stringventory::Resource::Strings
     parser.banner = "Usage: stringventory strings [options] [command] [arguments]"
 
-    help_message = parser.to_s
-
     parser.on("add", "Add a new string set") do
       comm = Stringventory::Action::Create
 
       Stringventory.common_opts(parser, sub_c, options)
 
-      help_message = parser.to_s
     end
     parser.on("remove", "Remove a string set") do
       comm = Stringventory::Action::Delete
 
       Stringventory.common_opts(parser, sub_c, options, strings?: false, packs?: false)
 
-      help_message = parser.to_s
     end
     parser.on("bought", "Add strings to the current stock") do
       comm = Stringventory::Action::Update
@@ -214,13 +206,11 @@ parser = OptionParser.new do |parser|
       options[:num_packs] = -1
 
       Stringventory.common_opts(parser, sub_c, options, strings?: false, pack_mod: -1)
-      help_message = parser.to_s
     end
 
     parser.on("list", "List string packs") do
       comm = Stringventory::Action::List
       Stringventory.common_opts(parser, sub_c, options, strings?: false, packs?: false)
-      help_message = parser.to_s
     end
 
   end
@@ -228,8 +218,6 @@ parser = OptionParser.new do |parser|
   parser.on("database", "Manage the database") do
     sub_c = Stringventory::Resource::Database
     parser.banner = "Usage: stringventory database [options] [command] [arguments]"
-
-    help_message = parser.to_s
 
     parser.on("create", "Create the database") do
       comm = Stringventory::Action::Create
@@ -261,7 +249,7 @@ end
 
 parser.parse
 
-# Really needed this stuff out of the main module, since granite really needs
+# Really needed this stuff out of the main module, since granite needs
 # to be required before anything happens with the models, otherwise validations
 # don't work
 Granite::Connections << Granite::Adapter::Sqlite.new(name: "con", url: db_url)
@@ -273,9 +261,9 @@ require "./actions/*"
 case sub_c
 when Stringventory::Resource::Guitar
 
-  Stringventory.validate_name(options, help_message, comm)
+  Stringventory.validate_name(options, comm)
 
-  dt = Stringventory.parse_time options[:date].to_s, help_message
+  dt = Stringventory.parse_time options[:date].to_s
 
   gtrs = Stringventory::Actions::Guitars.process_action(act: comm,
                                                         name: options[:name].to_s,
@@ -287,7 +275,7 @@ when Stringventory::Resource::Guitar
 
 when Stringventory::Resource::Strings
 
-  Stringventory.validate_name(options, help_message, comm)
+  Stringventory.validate_name(options, comm)
 
   packs = Stringventory::Actions::Strings.process_action(act: comm,
                                           name: options[:name].to_s,
@@ -297,8 +285,8 @@ when Stringventory::Resource::Strings
   Stringventory.print_output act: comm, res: "string packs", outp: packs
 
 when Stringventory::Resource::StringChange
-  Stringventory.validate_name(options, help_message, comm)
-  dt = Stringventory.parse_time options[:date].to_s, help_message
+  Stringventory.validate_name(options, comm)
+  dt = Stringventory.parse_time options[:date].to_s
 
   begin
     chngs = Stringventory::Actions::StringChanges.process_action(act: comm,
@@ -322,10 +310,10 @@ when Stringventory::Resource::Database
     puts res
   when Exception
     STDERR.puts res.message
-    exit 2
+    exit 5
   when Nil
     STDERR.puts "Action not recognized!"
-    exit 5
+    exit 6
   end
 
 else

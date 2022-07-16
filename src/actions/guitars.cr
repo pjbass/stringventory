@@ -13,7 +13,7 @@ module Stringventory::Actions::Guitars
     case act
     when Action::Create
 
-      # Both should be set. Validations on the model itself should handle the
+      # Validations on the model itself should handle the
       # permissible values.
       gtr = Models::Guitar.create name: name, num_strings: num_strs, bought_on: dt
       gtr.save
@@ -22,6 +22,7 @@ module Stringventory::Actions::Guitars
 
     when Action::List
 
+      # List all guitars, or match guitars to a name.
       if name.empty?
         gtrs = Models::Guitar.all
         ret = gtrs.to_a.sort_by do |gtr|
@@ -45,6 +46,7 @@ module Stringventory::Actions::Guitars
 
     when Action::Delete
 
+      # Find and delete a guitar.
       gtr = Models::Guitar.find_by name: name
 
       if gtr

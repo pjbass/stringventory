@@ -6,11 +6,7 @@ shards:
 
   granite:
     git: https://github.com/amberframework/granite.git
-    version: 0.23.0
-
-  micrate:
-    git: https://github.com/juanedi/micrate.git
-    version: 0.12.0
+    version: 0.23.1
 
   sqlite3:
     git: https://github.com/crystal-lang/crystal-sqlite3.git
