@@ -32,6 +32,12 @@ cli/*.dwarf
 .DS_Store
 *.pem
 
+# test database
+/web/db
+
+# any generated code
+/web/generated/**
+
 # debug
 /web/npm-debug.log*
 /web/yarn-debug.log*
