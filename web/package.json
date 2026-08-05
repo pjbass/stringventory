@@ -7,11 +7,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && tsc"
+    "lint": "eslint && tsc",
+    "migrate": "prisma migrate dev && prisma generate"
   },
   "dependencies": {
-    "@heroicons/react": "^2.2.0",
-    "@material-tailwind/react": "^2.1.10",
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.3.0",
+    "@mui/material": "^9.3.0",
+    "@mui/material-nextjs": "^9.3.0",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "better-auth": "^1.6.25",
@@ -29,7 +34,6 @@
     "eslint-config-next": "16.3.0",
     "jest": "^30.4.2",
     "prisma": "^7.9.1",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }
