@@ -13,15 +13,17 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
+  instruments   Instrument[]
+  parts         Part[]
 
   @@unique([email])
   @@map("user")
@@ -73,4 +75,99 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// A model for musical instruments. It links to the owner (user), features
+// it has, and any pending maintenance.
+model Instrument {
+  id          String         @id
+  name        String
+  ownerId     String
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  purchased   DateTime       @default(now())
+  modified    DateTime       @updatedAt
+  typeId      Int
+  insType     InstrumentType @relation(fields: [typeId], references: [id])
+  features    Feature[]
+  maintenance Maintenance[]
+}
+
+// A model for different types of instruments, including some default features
+// that are likely to be a part of any instrument of the type.
+model InstrumentType {
+  id          Int          @id @default(autoincrement())
+  name        String
+  instruments Instrument[]
+  features    Feature[]
+}
+
+// The type of maintenance performed on an instrument based on one of its features.
+// This could be like string changes on stringed instruments, changing tubes on an
+// amplifier, etc.
+model MaintenanceType {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  schedule    DateTime?
+  feature     Feature       @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  featureId   Int
+  parts       PartType[]
+  instances   Maintenance[]
+}
+
+// The features of an instrument. This can be things like the number of strings
+// on a guitar (6, 7, 8, 12, etc.), whether it has a maple or rosewood fretboard
+// , or even the type of tubes an amp uses (like EL84s, 6V6s, EL34s, etc.).
+model Feature {
+  id          Int               @id @default(autoincrement())
+  name        String
+  description String
+  instruments Instrument[]
+  instTypes   InstrumentType[]
+  maintenance MaintenanceType[]
+}
+
+// These are specific instances of maintenance performed or scheduled for an
+// instrument. When done is set, it becomes a part of an instrument's history.
+// When it has a due date but not a done date, it means it is something that
+// needs to be done. It can be used to identify when a mod was done when it
+// doesn't have a due date.
+model Maintenance {
+  id        Int             @id @default(autoincrement())
+  done      DateTime?
+  createdAt DateTime        @default(now())
+  due       DateTime?
+  mType     MaintenanceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  typeId    Int
+  on        Instrument      @relation(fields: [insId], references: [id], onDelete: Cascade)
+  insId     String
+  consumed  Part[]
+}
+
+// The type of part used by maintenance or mods. This can be things like strings,
+// tubes, fretboard oil, potentiometers, etc.
+model PartType {
+  id          Int               @id @default(autoincrement())
+  name        String
+  description String
+  usedBy      MaintenanceType[]
+  owned       Part[]
+}
+
+// Actual instances of parts owned and that either have been or can be used
+// to maintain an instrument. These are the individual packs of strings, the
+// actual tubes, etc. This distinction between type and actual parts lets
+// different brands/sizes of a part satisfy the maintenance without having to
+// specifically tie every individual part to what it can potentially be used
+// for directly.
+model Part {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  partType    PartType      @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  typeId      Int
+  number      Int
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  usedBy      Maintenance[]
 }
