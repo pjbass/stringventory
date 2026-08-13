@@ -74,10 +74,15 @@ const userData: Prisma.UserCreateInput[] = [
         },
       ],
     },
+  }, {
+    // This user can be used as the sole account for a self-hosted, single-user setup.
+    id: process.env.SV_SINGLE_USER_ID ?? "singleuser",
+    name: process.env.SV_SINGLE_USER_NAME ?? "Single User",
+    email: process.env.SV_SINGLE_USER_EMAIL ?? "singleuser@not-an-email.com",
   },
 ];
 
-const maintenanceData: Prisma.MaintenanceCreateInuput[] = [
+const maintenanceData: Prisma.MaintenanceCreateInput[] = [
   {
     due: new Date(2027, 0, 0),
     mType: {
@@ -92,23 +97,43 @@ const maintenanceData: Prisma.MaintenanceCreateInuput[] = [
 export async function main() {
   
   for (const p of partTypeData) {
-    await prisma.partType.create({ data: p });
+    try {
+      await prisma.partType.create({ data: p });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
   }
   
   for (const i of instrumentTypeData) {
-    await prisma.instrumentType.create({ data: i });
+    try {
+      await prisma.instrumentType.create({ data: i });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
   }
   
   for (const m of maintenanceTypeData) {
-    await prisma.maintenanceType.create({ data: m });
+    try {
+      await prisma.maintenanceType.create({ data: m });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
   }
   
   for (const u of userData) {
-    await prisma.user.create({ data: u });
+    try {
+      await prisma.user.create({ data: u });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
   }
   
   for (const m of maintenanceData) {
-    await prisma.maintenance.create({ data: m });
+    try {
+      await prisma.maintenance.create({ data: m });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
   }
 }
 
