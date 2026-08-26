@@ -8,6 +8,11 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator pothos {
+  provider = "prisma-pothos-types"
+  output   = "../generated/pothos-prisma-types.ts"
+}
+
 datasource db {
   provider = "sqlite"
 }
