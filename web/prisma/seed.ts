@@ -12,6 +12,9 @@ const partTypeData: Prisma.PartTypeCreateInput[] = [
   {
     name: "Electric Guitar Strings (6)",
     description: "A pack of 6 electric guitar strings.",
+    owner: {
+      connect: { id: "testuserid" },
+    },
   },
 ];
 
@@ -22,6 +25,9 @@ const maintenanceTypeData: Prisma.MaintenanceTypeCreateInput[] = [
     schedule: new Date(0, 6),
     feature: {
       connect: { id: 1 },
+    },
+    owner: {
+      connect: { id: "testuserid" },
     },
     parts: {
       connect: [
@@ -34,14 +40,43 @@ const maintenanceTypeData: Prisma.MaintenanceTypeCreateInput[] = [
 const instrumentTypeData: Prisma.InstrumentTypeCreateInput[] = [
   {
     name: "Electric Guitar",
+    owner: {
+      connect: { id: "testuserid" },
+    },
     features: {
       create: [
         {
           name: "6 Stringed Electric",
           description: "An electric guitar with 6 strings",
+          owner: {
+            connect: { id: "testuserid" },
+          },
         },
       ],
     }
+  },
+];
+
+const insData: Prisma.InstrumentCreateInput[] = [
+  {
+    serial: "serial-12345-xz",
+    name: "Some Guitar",
+    insType: { connect: { id: 1 } },
+    owner: {
+      connect: { id: "testuserid" },
+    },
+  },
+];
+
+const partsData: Prisma.PartCreateInput[] = [
+  {
+    name: "Generic 6 String Set",
+    description: "A generic set of strings for an electric guitar. 10 - 46.",
+    number: 2,
+    partType: { connect: { id: 1 } },
+    owner: {
+      connect: { id: "testuserid" },
+    },
   },
 ];
 
@@ -50,30 +85,6 @@ const userData: Prisma.UserCreateInput[] = [
     id: "testuserid",
     name: "Test User",
     email: "testuser@not-an-email.com",
-    instruments: {
-      create: [
-        {
-          id: "serial-12345-xz",
-          name: "Some Guitar",
-          insType: {
-            connect: { id: 1 },
-          },
-          features: {
-            connect: { id: 1 },
-          },
-        },
-      ],
-    },
-    parts: {
-      create: [
-        {
-          name: "Generic 6 String Set",
-          description: "A generic set of strings for an electric guitar. 10 - 46.",
-          number: 2,
-          typeId: 1,
-        },
-      ],
-    },
   }, {
     // This user can be used as the sole account for a self-hosted, single-user setup.
     id: process.env.SV_SINGLE_USER_ID ?? "singleuser",
@@ -89,12 +100,23 @@ const maintenanceData: Prisma.MaintenanceCreateInput[] = [
       connect: { id: 1 },
     },
     on: {
-      connect: { id: "serial-12345-xz" },
+      connect: { id: 1 },
+    },
+    owner: {
+      connect: { id: "testuserid" },
     },
   },
 ];
 
 export async function main() {
+  
+  for (const u of userData) {
+    try {
+      await prisma.user.create({ data: u });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
+  }
   
   for (const p of partTypeData) {
     try {
@@ -120,9 +142,17 @@ export async function main() {
     }
   }
   
-  for (const u of userData) {
+  for (const i of insData) {
     try {
-      await prisma.user.create({ data: u });
+      await prisma.instrument.create({ data: i });
+    } catch (e: unknown) {
+      console.log(e, ": Skipping");
+    }
+  }
+  
+  for (const p of partsData) {
+    try {
+      await prisma.part.create({ data: p });
     } catch (e: unknown) {
       console.log(e, ": Skipping");
     }

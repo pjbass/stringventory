@@ -18,17 +18,22 @@ datasource db {
 }
 
 model User {
-  id            String       @id
-  name          String
-  email         String
-  emailVerified Boolean      @default(false)
-  image         String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  instruments   Instrument[]
-  parts         Part[]
+  id               String            @id
+  name             String
+  email            String
+  emailVerified    Boolean           @default(false)
+  image            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  instruments      Instrument[]
+  parts            Part[]
+  instrumentTypes  InstrumentType[]
+  maintenanceTypes MaintenanceType[]
+  features         Feature[]
+  maintenances     Maintenance[]
+  partTypes        PartType[]
 
   @@unique([email])
   @@map("user")
@@ -85,7 +90,8 @@ model Verification {
 // A model for musical instruments. It links to the owner (user), features
 // it has, and any pending maintenance.
 model Instrument {
-  id          String         @id
+  id          Int            @id @default(autoincrement())
+  serial      String
   name        String
   ownerId     String
   owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -102,6 +108,8 @@ model Instrument {
 model InstrumentType {
   id          Int          @id @default(autoincrement())
   name        String
+  ownerId     String
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   instruments Instrument[]
   features    Feature[]
 }
@@ -113,6 +121,8 @@ model MaintenanceType {
   id          Int           @id @default(autoincrement())
   name        String
   description String
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   schedule    DateTime?
   feature     Feature       @relation(fields: [featureId], references: [id], onDelete: Cascade)
   featureId   Int
@@ -127,6 +137,8 @@ model Feature {
   id          Int               @id @default(autoincrement())
   name        String
   description String
+  ownerId     String
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   instruments Instrument[]
   instTypes   InstrumentType[]
   maintenance MaintenanceType[]
@@ -144,8 +156,10 @@ model Maintenance {
   due       DateTime?
   mType     MaintenanceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
   typeId    Int
+  ownerId   String
+  owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   on        Instrument      @relation(fields: [insId], references: [id], onDelete: Cascade)
-  insId     String
+  insId     Int
   consumed  Part[]
 }
 
@@ -155,6 +169,8 @@ model PartType {
   id          Int               @id @default(autoincrement())
   name        String
   description String
+  ownerId     String
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   usedBy      MaintenanceType[]
   owned       Part[]
 }
