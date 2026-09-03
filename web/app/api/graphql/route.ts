@@ -115,7 +115,7 @@ builder.queryField('instrument', (t) =>
   t.prismaField({
     type: 'Instrument',
     args: {
-      id: t.arg.string(),
+      id: t.arg.int(),
     },
     resolve: async (query, _parent, args, context) => (
       await InsServ.getById(context.userId, args.id, query)
@@ -139,12 +139,35 @@ builder.mutationField('addInstrument', (t) =>
   t.prismaField({
     type: 'Instrument',
     args: {
-      id: t.arg.string(),
+      serial: t.arg.string(),
       name: t.arg.string(),
       type: t.arg.string(),
     },
     resolve: async (query, _parent, args, context) => 
-      await InsServ.create(context.userId, args.id, args.name, args.type, query),
+      await InsServ.create(context.userId, args.serial, args.name, args.type, query),
+  })
+);
+
+builder.mutationField('updateInstrument', (t) =>
+  t.prismaField({
+    type: 'Instrument',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await InsServ.update(context.userId, args.id, args.name, query),
+  })
+);
+
+builder.mutationField('deleteInstrument', (t) =>
+  t.prismaField({
+    type: 'Instrument',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await InsServ.rm(context.userId, args.id, query),
   })
 );
 
@@ -164,7 +187,7 @@ builder.queryField('instrumentType', (t) =>
       id: t.arg.string(),
     },
     resolve: async (query, _parent, args, context) => (
-      await ITServ.getById(args.id, query)
+      await ITServ.getById(context.userId, args.id, query)
     )
   })
 );
