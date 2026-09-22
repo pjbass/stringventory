@@ -215,6 +215,29 @@ builder.mutationField('addInstrumentType', (t) =>
   })
 );
 
+builder.mutationField('updateInstrumentType', (t) =>
+  t.prismaField({
+    type: 'InstrumentType',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await ITServ.update(context.userId, args.id, args.name, query),
+  })
+);
+
+builder.mutationField('deleteInstrumentType', (t) =>
+  t.prismaField({
+    type: 'InstrumentType',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await ITServ.rm(context.userId, args.id, query),
+  })
+);
+
 const schema = builder.toSchema();
 
 interface NextContext {

@@ -52,3 +52,36 @@ export async function create(userId: string, name: string, query: object): Promi
     },
   });
 }
+
+export async function update(
+  userId: string, 
+  typeId: number, 
+  name: string, 
+  query: object): Promise<InstrumentType> {
+  
+  return await prisma.instrumentType.update({
+    ...query,
+    where: {
+      id: typeId,
+      ownerId: userId,
+    },
+    data: {
+      name,
+    }
+  });
+  
+}
+
+export async function rm(
+  userId: string, 
+  typeId: number,
+  query: object): Promise<InstrumentType> {
+    
+  return await prisma.instrumentType.delete({
+    ...query,
+    where: {
+      id: typeId,
+      ownerId: userId,
+    },
+  });
+}
