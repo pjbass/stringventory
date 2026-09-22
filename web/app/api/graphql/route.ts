@@ -7,6 +7,7 @@ import { getUserId } from '@/lib/services/userService';
 import { DateTimeResolver } from 'graphql-scalars';
 import * as InsServ from '@/lib/services/instrumentService';
 import * as ITServ from '@/lib/services/instrumentTypeService';
+import * as FtServ from '@/lib/services/featureService';
 
 import type PrismaTypes from '@/generated/pothos-prisma-types';
 import { getDatamodel } from '@/generated/pothos-prisma-types';
@@ -89,16 +90,29 @@ builder.prismaObject("Instrument", {
       resolve: (parent) => new Date(parent.modified),
     }),
     insType: t.relation("insType"),
-    //features: t.relation("features"),
+    features: t.relation("features"),
     //maintenance: t.relation("maintenance"),
   })
 });
 
 builder.prismaObject("InstrumentType", {
-  fields: (t) =>({
+  fields: (t) => ({
     id: t.exposeID('id'),
     name: t.exposeString('name'),
     instruments: t.relation('instruments'),
+    owner: t.relation("owner"),
+  }),
+});
+
+builder.prismaObject("Feature", {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
+    description: t.exposeString('description'),
+    instruments: t.relation('instruments'),
+    instTypes: t.relation('instTypes'),
+    owner: t.relation("owner"),
+    //maintenance: t.relation("maintenance"),
   }),
 });
 
@@ -235,6 +249,78 @@ builder.mutationField('deleteInstrumentType', (t) =>
     },
     resolve: async (query, _parent, args, context) =>
       await ITServ.rm(context.userId, args.id, query),
+  })
+);
+
+builder.queryField('features', (t) =>
+  t.prismaField({
+    type: ['Feature'],
+    resolve: async (query, _parent, _args, context) => (
+      await FtServ.getAll(context.userId, query)
+    )
+  })
+);
+
+builder.queryField('feature', (t) =>
+  t.prismaField({
+    type: 'Feature',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await FtServ.getById(context.userId, args.id, query)
+    )
+  })
+);
+
+builder.queryField('searchFeatures', (t) =>
+  t.prismaField({
+    type: ['Feature'],
+    args: {
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await FtServ.searchByName(context.userId, args.name, query)
+    )
+  })
+);
+
+builder.mutationField('addFeature', (t) =>
+  t.prismaField({
+    type: 'Feature',
+    args: {
+      name: t.arg.string(),
+      description: t.arg.string({
+        required: false,
+        defaultValue: "",
+      }),
+    },
+    resolve: async (query, _parent, args, context) => 
+      await FtServ.create(context.userId, args.name, args.description, query),
+  })
+);
+
+builder.mutationField('updateFeature', (t) =>
+  t.prismaField({
+    type: 'Feature',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string({ required: false }),
+      description: t.arg.string({ required: false }),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await FtServ.update(context.userId, args.id, args.name, args.description, query),
+  })
+);
+
+builder.mutationField('deleteFeature', (t) =>
+  t.prismaField({
+    type: 'Feature',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await FtServ.rm(context.userId, args.id, query),
   })
 );
 
