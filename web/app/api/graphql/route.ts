@@ -80,6 +80,7 @@ builder.prismaObject("Instrument", {
   fields: (t) => ({
     id: t.exposeID('id'),
     name: t.exposeString('name'),
+    serial: t.exposeString('serial'),
     owner: t.relation("owner"),
     purchased: t.field({
       type: 'DateTime',
@@ -156,9 +157,16 @@ builder.mutationField('addInstrument', (t) =>
       serial: t.arg.string(),
       name: t.arg.string(),
       type: t.arg.string(),
+      features: t.arg.stringList(),
     },
     resolve: async (query, _parent, args, context) => 
-      await InsServ.create(context.userId, args.serial, args.name, args.type, query),
+      await InsServ.create(
+        context.userId, 
+        args.serial, 
+        args.name, 
+        args.type, 
+        args.features, 
+        query),
   })
 );
 
