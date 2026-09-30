@@ -8,6 +8,8 @@ import { DateTimeResolver } from 'graphql-scalars';
 import * as InsServ from '@/lib/services/instrumentService';
 import * as ITServ from '@/lib/services/instrumentTypeService';
 import * as FtServ from '@/lib/services/featureService';
+import * as PtTServ from '@/lib/services/partTypeService';
+import * as PtServ from '@/lib/services/partService';
 
 import type PrismaTypes from '@/generated/pothos-prisma-types';
 import { getDatamodel } from '@/generated/pothos-prisma-types';
@@ -114,6 +116,28 @@ builder.prismaObject("Feature", {
     instTypes: t.relation('instTypes'),
     owner: t.relation("owner"),
     //maintenance: t.relation("maintenance"),
+  }),
+});
+
+builder.prismaObject("Part", {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
+    description: t.exposeString('description'),
+    partType: t.relation("partType"),
+    number: t.exposeInt('number'),
+    owner: t.relation("owner"),
+  }),
+});
+
+builder.prismaObject("PartType", {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
+    description: t.exposeString('description'),
+    owned: t.relation("owned"),
+    owner: t.relation("owner"),
+    //usedBy: t.relation("usedBy"),
   }),
 });
 
@@ -233,7 +257,7 @@ builder.mutationField('addInstrumentType', (t) =>
       name: t.arg.string(),
     },
     resolve: async (query, _parent, args, context) => 
-      await ITServ.create(args.name, query),
+      await ITServ.create(context.userId, args.name, query),
   })
 );
 
@@ -329,6 +353,153 @@ builder.mutationField('deleteFeature', (t) =>
     },
     resolve: async (query, _parent, args, context) =>
       await FtServ.rm(context.userId, args.id, query),
+  })
+);
+
+builder.queryField('parts', (t) =>
+  t.prismaField({
+    type: ['Part'],
+    resolve: async (query, _parent, _args, context) => (
+      await PtServ.getAll(context.userId, query)
+    )
+  })
+);
+
+builder.queryField('part', (t) =>
+  t.prismaField({
+    type: 'Part',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await PtServ.getById(context.userId, args.id, query)
+    )
+  })
+);
+
+builder.queryField('searchParts', (t) =>
+  t.prismaField({
+    type: ['Part'],
+    args: {
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await PtServ.searchByName(context.userId, args.name, query)
+    )
+  })
+);
+
+builder.mutationField('addPart', (t) =>
+  t.prismaField({
+    type: 'Part',
+    args: {
+      description: t.arg.string({required: false, defaultValue: ""}),
+      name: t.arg.string(),
+      type: t.arg.string(),
+      number: t.arg.int({required: false, defaultValue: 1}),
+    },
+    resolve: async (query, _parent, args, context) => 
+      await PtServ.create(
+        context.userId,
+        args.name,
+        args.description,
+        args.number,
+        args.type, 
+        query),
+  })
+);
+
+builder.mutationField('updatePart', (t) =>
+  t.prismaField({
+    type: 'Part',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string({required: false}),
+      description: t.arg.string({required: false}),
+      number: t.arg.int({required: false}),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await PtServ.update(context.userId, args.id, args.name, args.description, args.number, query),
+  })
+);
+
+builder.mutationField('deletePart', (t) =>
+  t.prismaField({
+    type: 'Part',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await PtServ.rm(context.userId, args.id, query),
+  })
+);
+
+builder.queryField('partTypes', (t) =>
+  t.prismaField({
+    type: ['PartType'],
+    resolve: async (query, _parent, _args, context) => (
+      await PtTServ.getAll(context.userId, query)
+    )
+  })
+);
+
+builder.queryField('partType', (t) =>
+  t.prismaField({
+    type: 'PartType',
+    args: {
+      id: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await PtTServ.getById(context.userId, args.id, query)
+    )
+  })
+);
+
+builder.queryField('searchPartTypes', (t) =>
+  t.prismaField({
+    type: ['PartType'],
+    args: {
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await PtTServ.searchByName(context.userId, args.name, query)
+    )
+  })
+);
+
+builder.mutationField('addPartType', (t) =>
+  t.prismaField({
+    type: 'PartType',
+    args: {
+      name: t.arg.string(),
+      description: t.arg.string({required: false}),
+    },
+    resolve: async (query, _parent, args, context) => 
+      await PtTServ.create(context.userId, args.name, args.description, query),
+  })
+);
+
+builder.mutationField('updatePartType', (t) =>
+  t.prismaField({
+    type: 'PartType',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string({required: false}),
+      description: t.arg.string({required: false}),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await PtTServ.update(context.userId, args.id, args.name, args.description, query),
+  })
+);
+
+builder.mutationField('deletePartType', (t) =>
+  t.prismaField({
+    type: 'PartType',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await PtTServ.rm(context.userId, args.id, query),
   })
 );
 
