@@ -27,8 +27,8 @@ export async function searchByName(userId: string, name: string, query: object):
     where: {
       name: {
         contains: name,
-        ownerId: userId,
       },
+      ownerId: userId,
     },
   });
 }

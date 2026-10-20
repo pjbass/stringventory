@@ -11,7 +11,7 @@ export async function getAll(userId: string, query: object): Promise<Instrument[
 }
 
 
-export async function getById(userId: string, insId: string, query: object): Promise<Instrument | null> {
+export async function getById(userId: string, insId: number, query: object): Promise<Instrument | null> {
   return await prisma.instrument.findUnique({
     ...query,
     where: {
@@ -79,7 +79,7 @@ export async function create(
     
   // Add default features for the instrument type.
   if (iType) {
-    for (f of iType.features) {
+    for (const f of iType.features) {
       conF.push({id: f.id});
     }
   }

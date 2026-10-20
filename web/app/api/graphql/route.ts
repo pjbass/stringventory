@@ -10,6 +10,8 @@ import * as ITServ from '@/lib/services/instrumentTypeService';
 import * as FtServ from '@/lib/services/featureService';
 import * as PtTServ from '@/lib/services/partTypeService';
 import * as PtServ from '@/lib/services/partService';
+import * as MtServ from '@/lib/services/maintenanceService';
+import * as MtTServ from '@/lib/services/maintenanceTypeService';
 
 import type PrismaTypes from '@/generated/pothos-prisma-types';
 import { getDatamodel } from '@/generated/pothos-prisma-types';
@@ -94,7 +96,7 @@ builder.prismaObject("Instrument", {
     }),
     insType: t.relation("insType"),
     features: t.relation("features"),
-    //maintenance: t.relation("maintenance"),
+    maintenance: t.relation("maintenance"),
   })
 });
 
@@ -115,7 +117,7 @@ builder.prismaObject("Feature", {
     instruments: t.relation('instruments'),
     instTypes: t.relation('instTypes'),
     owner: t.relation("owner"),
-    //maintenance: t.relation("maintenance"),
+    maintenance: t.relation("maintenance"),
   }),
 });
 
@@ -137,7 +139,45 @@ builder.prismaObject("PartType", {
     description: t.exposeString('description'),
     owned: t.relation("owned"),
     owner: t.relation("owner"),
-    //usedBy: t.relation("usedBy"),
+    usedBy: t.relation("usedBy"),
+  }),
+});
+
+builder.prismaObject("Maintenance", {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    due: t.field({
+      type: 'DateTime',
+      resolve: (parent) => new Date(parent.due),
+    }),
+    done: t.field({
+      type: 'DateTime',
+      resolve: (parent) => new Date(parent.done),
+    }),
+    createdAt: t.field({
+      type: 'DateTime',
+      resolve: (parent) => new Date(parent.createdAt),
+    }),
+    mType: t.relation("mType"),
+    on: t.relation("on"),
+    consumed: t.relation("consumed"),
+    owner: t.relation("owner"),
+  }),
+});
+
+builder.prismaObject("MaintenanceType", {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
+    description: t.exposeString('description'),
+    schedule: t.field({
+      type: 'DateTime',
+      resolve: (parent) => new Date(parent.schedule),
+    }),
+    owner: t.relation("owner"),
+    parts: t.relation("parts"),
+    instances: t.relation("instances"),
+    feature: t.relation("feature"),
   }),
 });
 
@@ -500,6 +540,146 @@ builder.mutationField('deletePartType', (t) =>
     },
     resolve: async (query, _parent, args, context) =>
       await PtTServ.rm(context.userId, args.id, query),
+  })
+);
+
+builder.queryField('maintenances', (t) =>
+  t.prismaField({
+    type: ['Maintenance'],
+    resolve: async (query, _parent, _args, context) => (
+      await MtServ.getAll(context.userId, query)
+    )
+  })
+);
+
+builder.queryField('maintenance', (t) =>
+  t.prismaField({
+    type: 'Maintenance',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await MtServ.getById(context.userId, args.id, query)
+    )
+  })
+);
+
+builder.mutationField('addMaintenance', (t) =>
+  t.prismaField({
+    type: 'Maintenance',
+    args: {
+      type: t.arg.string(),
+      done: t.arg({ type: 'DateTime', required: false }),
+      due: t.arg({ type: 'DateTime', required: false }),
+      instrument: t.arg.string(),
+      parts: t.arg.stringList({ required: false, defaultValue: [] }),
+    },
+    resolve: async (query, _parent, args, context) => 
+      await MtServ.create(
+        context.userId,
+        args.instrument,
+        args.type,
+        args.done,
+        args.due,
+        args.parts,
+        query),
+  })
+);
+
+builder.mutationField('updateMaintenance', (t) =>
+  t.prismaField({
+    type: 'Maintenance',
+    args: {
+      id: t.arg.int(),
+      done: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
+      due: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
+      parts: t.arg.stringList({ required: false, defaultValue: undefined }),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await MtServ.update(context.userId, args.id, args.done, args.due, args.parts, query),
+  })
+);
+
+builder.mutationField('deleteMaintenance', (t) =>
+  t.prismaField({
+    type: 'Maintenance',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await MtServ.rm(context.userId, args.id, query),
+  })
+);
+
+builder.queryField('maintenanceTypes', (t) =>
+  t.prismaField({
+    type: ['MaintenanceType'],
+    resolve: async (query, _parent, _args, context) => (
+      await MtTServ.getAll(context.userId, query)
+    )
+  })
+);
+
+builder.queryField('maintenanceType', (t) =>
+  t.prismaField({
+    type: 'MaintenanceType',
+    args: {
+      id: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await MtTServ.getById(context.userId, args.id, query)
+    )
+  })
+);
+
+builder.queryField('searchMaintenanceTypes', (t) =>
+  t.prismaField({
+    type: ['MaintenanceType'],
+    args: {
+      name: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => (
+      await MtTServ.searchByName(context.userId, args.name, query)
+    )
+  })
+);
+
+builder.mutationField('addMaintenanceType', (t) =>
+  t.prismaField({
+    type: 'MaintenanceType',
+    args: {
+      name: t.arg.string(),
+      description: t.arg.string({required: false}),
+      schedule: t.arg({ type: 'DateTime', required: false }),
+      feature: t.arg.string(),
+    },
+    resolve: async (query, _parent, args, context) => 
+      await MtTServ.create(context.userId, args.name, args.description, args.schedule, args.feature, query),
+  })
+);
+
+builder.mutationField('updateMaintenanceType', (t) =>
+  t.prismaField({
+    type: 'MaintenanceType',
+    args: {
+      id: t.arg.int(),
+      name: t.arg.string({required: false, defaultValue: undefined }),
+      description: t.arg.string({required: false, defaultValue: undefined }),
+      schedule: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await MtTServ.update(context.userId, args.id, args.name, args.description, args.schedule, query),
+  })
+);
+
+builder.mutationField('deleteMaintenanceType', (t) =>
+  t.prismaField({
+    type: 'MaintenanceType',
+    args: {
+      id: t.arg.int(),
+    },
+    resolve: async (query, _parent, args, context) =>
+      await MtTServ.rm(context.userId, args.id, query),
   })
 );
 

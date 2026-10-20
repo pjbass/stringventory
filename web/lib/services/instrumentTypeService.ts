@@ -11,7 +11,7 @@ export async function getAll(userId: string, query: object): Promise<InstrumentT
 }
 
 
-export async function getById(userId: string, insId: string, query: object): Promise<InstrumentType | null> {
+export async function getById(userId: string, insId: number, query: object): Promise<InstrumentType | null> {
   return await prisma.instrumentType.findUnique({
     ...query,
     where: {
@@ -36,8 +36,8 @@ export async function searchByName(userId: string, name: string, query: object):
 export async function create(userId: string, name: string, query: object): Promise<InstrumentType> {
   
   // Though technically name is not constrained in the DB as a unique value
-  // (since it seems you can't do that and have Prisma create an implicit
-  // join table), it should be a unique value. This should help to enforce it.
+  // because of ownership (multiple users can have an "Electric Guitar" type),
+  // it should be unique for each user.
   const found = await prisma.instrumentType.findFirst({ where: { name, ownerId: userId } })
   
   if (found) {
@@ -48,7 +48,7 @@ export async function create(userId: string, name: string, query: object): Promi
     ...query,
     data: {
       name,
-      owner: { connect: { id: ownerId } },
+      owner: { connect: { id: userId } },
     },
   });
 }
