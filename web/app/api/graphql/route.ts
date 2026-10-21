@@ -221,6 +221,7 @@ builder.mutationField('addInstrument', (t) =>
       serial: t.arg.string(),
       name: t.arg.string(),
       type: t.arg.string(),
+      purchased: t.arg({ type: 'Date', defaultValue: new Date() }),
       features: t.arg.stringList(),
     },
     resolve: async (query, _parent, args, context) => 
@@ -228,7 +229,8 @@ builder.mutationField('addInstrument', (t) =>
         context.userId, 
         args.serial, 
         args.name, 
-        args.type, 
+        args.type,
+        args.purchased,
         args.features, 
         query),
   })
@@ -239,10 +241,11 @@ builder.mutationField('updateInstrument', (t) =>
     type: 'Instrument',
     args: {
       id: t.arg.int(),
-      name: t.arg.string(),
+      name: t.arg.string({ defaultValue: undefined }),
+      purchased: t.arg({ type: 'Date', defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) =>
-      await InsServ.update(context.userId, args.id, args.name, query),
+      await InsServ.update(context.userId, args.id, args.name, args.purchased, query),
   })
 );
 

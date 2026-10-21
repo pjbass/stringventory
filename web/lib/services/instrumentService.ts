@@ -38,6 +38,7 @@ export async function create(
   serial: string, 
   name: string, 
   insType: string,
+  purchased: Date,
   features: string[],
   query: object): Promise<Instrument> {
     
@@ -90,6 +91,7 @@ export async function create(
       serial,
       name,
       owner,
+      purchased,
       insType: typeCon,
       features: {
         connect: conF,
@@ -102,7 +104,8 @@ export async function create(
 export async function update(
   userId: string, 
   insId: number, 
-  name: string, 
+  name: string | undefined,
+  purchased: Date | undefined,
   query: object): Promise<Instrument> {
   
   return await prisma.instrument.update({
@@ -113,6 +116,7 @@ export async function update(
     },
     data: {
       name,
+      purchased,
     }
   });
   
