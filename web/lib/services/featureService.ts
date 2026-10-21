@@ -11,7 +11,7 @@ export async function getAll(userId: string, query: object): Promise<Feature[]> 
 }
 
 
-export async function getById(userId: string, ftId: string, query: object): Promise<Feature | null> {
+export async function getById(userId: string, ftId: number, query: object): Promise<Feature | null> {
   return await prisma.feature.findUnique({
     ...query,
     where: {
@@ -55,9 +55,13 @@ export async function create(
 export async function update(
   userId: string, 
   ftId: number, 
-  name: string | null,
-  description: string | null,
+  name: string | undefined,
+  description: string | undefined,
   query: object): Promise<Feature> {
+    
+  if (name === undefined && description === undefined) {
+    throw new Error("'name' and 'description' are undefined: no changes to make.");
+  }
   
   return await prisma.feature.update({
     ...query,

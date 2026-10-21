@@ -51,7 +51,7 @@ export async function create(
   });
   
   const typeCon = pType !== null ? { connect: { id: pType.id } } :
-    { create: { name: ptType, owner } };
+    { create: { name: ptType, description: "", owner } };
     
   return await prisma.part.create({
     ...query,
@@ -68,9 +68,9 @@ export async function create(
 export async function update(
   userId: string, 
   ptId: number, 
-  name: string | null,
-  number: number | null,
-  description: string | null,
+  name: string | undefined,
+  description: string | undefined,
+  number: number | undefined,
   query: object): Promise<Part> {
   
   return await prisma.part.update({

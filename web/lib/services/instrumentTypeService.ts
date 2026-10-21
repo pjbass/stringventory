@@ -27,8 +27,8 @@ export async function searchByName(userId: string, name: string, query: object):
     where: {
       name: {
         contains: name,
-        ownerId: userId,
       },
+      ownerId: userId,
     },
   });
 }
@@ -58,6 +58,22 @@ export async function update(
   typeId: number, 
   name: string, 
   query: object): Promise<InstrumentType> {
+    
+  const tp = await prisma.instrumentType.findFirst({
+    ...query,
+    where: {
+      name,
+      ownerId: userId,
+    },
+  });
+  
+  if (tp) {
+    if (tp.id === typeId) {
+      return tp;
+    } else {
+      throw new Error(`Instrument type ${name} already exists!`);
+    }
+  }
   
   return await prisma.instrumentType.update({
     ...query,

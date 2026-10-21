@@ -37,7 +37,7 @@ export async function create(
   userId: string, 
   name: string, 
   description: string,
-  schedule: Date | null,
+  schedule: Date | null | undefined,
   feature: string,
   query: object): Promise<MaintenanceType> {
   

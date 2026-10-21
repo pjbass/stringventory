@@ -25,8 +25,8 @@ export async function create(
   userId: string, 
   ins: string,
   mtType: string,
-  done: Date | null,
-  due: Date | null,
+  done: Date | null | undefined,
+  due: Date | null | undefined,
   parts: string[],
   query: object): Promise<Maintenance> {
     
@@ -42,21 +42,24 @@ export async function create(
     throw new Error(`Instrument ${ins} does not exist.`);
   }
   
-  const consumed = parts ? { connect: parts.map( async (p) => {
-      const part = await prisma.part.findFirst({
-        where: {
-          name: p,
-          ownerId: userId,
-        }
-      });
-      
-      if (part) {
-        return {id: part.id};
-      } else {
-        throw new Error(`Part ${p} does not exist.`);
+  const pConn = [];
+  
+  for (const p in parts) {
+    const part = await prisma.part.findFirst({
+      where: {
+        name: p,
+        ownerId: userId,
       }
-    }),
-  } : undefined;
+    });
+    
+    if (part) {
+      pConn.push({id: part.id});
+    } else {
+      throw new Error(`Part ${p} does not exist.`);
+    }
+  }
+    
+  const consumed = parts ? { connect: pConn } : undefined;
     
   const owner = { connect: { id: userId } };
   const mType = await prisma.maintenanceType.findFirst({
@@ -86,26 +89,29 @@ export async function create(
 export async function update(
   userId: string, 
   mtId: number, 
-  done: Date | null,
-  due: Date | null,
+  done: Date | null | undefined,
+  due: Date | null | undefined,
   parts: string[],
   query: object): Promise<Maintenance> {
     
-  const consumed = parts ? { connect: parts.map( async (p) => {
-      const part = await prisma.part.findFirst({
-        where: {
-          name: p,
-          ownerId: userId,
-        }
-      });
-      
-      if (part) {
-        return {id: part.id};
-      } else {
-        throw new Error(`Part ${p} does not exist.`);
+  const pConn = [];
+  
+  for (const p in parts) {
+    const part = await prisma.part.findFirst({
+      where: {
+        name: p,
+        ownerId: userId,
       }
-    }),
-  } : undefined;
+    });
+    
+    if (part) {
+      pConn.push({id: part.id});
+    } else {
+      throw new Error(`Part ${p} does not exist.`);
+    }
+  }
+    
+  const consumed = parts ? { connect: pConn } : undefined;
   
   return await prisma.maintenance.update({
     ...query,

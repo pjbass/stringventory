@@ -4,7 +4,7 @@ import ScopeAuthPlugin from '@pothos/plugin-scope-auth';
 import prisma from '@/lib/prisma';
 import { createYoga } from 'graphql-yoga';
 import { getUserId } from '@/lib/services/userService';
-import { DateTimeResolver } from 'graphql-scalars';
+import { DateResolver } from 'graphql-scalars';
 import * as InsServ from '@/lib/services/instrumentService';
 import * as ITServ from '@/lib/services/instrumentTypeService';
 import * as FtServ from '@/lib/services/featureService';
@@ -24,8 +24,8 @@ const builder = new SchemaBuilder<{
   Context: { userId: string };
   PrismaTypes: PrismaTypes; // This gives the builder all the type information about your prisma schema
   Scalars: {
-    DateTime: {
-      Input: Date | string;
+    Date: {
+      Input: Date;
       Output: Date;
     };
   };
@@ -69,7 +69,7 @@ builder.mutationType({
   },
 });
 
-builder.addScalarType('DateTime', DateTimeResolver);
+builder.addScalarType('Date', DateResolver);
 
 builder.prismaObject("User", {
   fields: (t) => ({
@@ -87,11 +87,11 @@ builder.prismaObject("Instrument", {
     serial: t.exposeString('serial'),
     owner: t.relation("owner"),
     purchased: t.field({
-      type: 'DateTime',
+      type: 'Date',
       resolve: (parent) => new Date(parent.purchased),
     }),
     modified: t.field({
-      type: 'DateTime',
+      type: 'Date',
       resolve: (parent) => new Date(parent.modified),
     }),
     insType: t.relation("insType"),
@@ -147,15 +147,15 @@ builder.prismaObject("Maintenance", {
   fields: (t) => ({
     id: t.exposeID('id'),
     due: t.field({
-      type: 'DateTime',
-      resolve: (parent) => new Date(parent.due),
+      type: 'Date',
+      resolve: (parent) => parent.due ? new Date(parent.due) : null,
     }),
     done: t.field({
-      type: 'DateTime',
-      resolve: (parent) => new Date(parent.done),
+      type: 'Date',
+      resolve: (parent) => parent.done ? new Date(parent.done) : null,
     }),
     createdAt: t.field({
-      type: 'DateTime',
+      type: 'Date',
       resolve: (parent) => new Date(parent.createdAt),
     }),
     mType: t.relation("mType"),
@@ -171,8 +171,8 @@ builder.prismaObject("MaintenanceType", {
     name: t.exposeString('name'),
     description: t.exposeString('description'),
     schedule: t.field({
-      type: 'DateTime',
-      resolve: (parent) => new Date(parent.schedule),
+      type: 'Date',
+      resolve: (parent) => parent.schedule ? new Date(parent.schedule) : null,
     }),
     owner: t.relation("owner"),
     parts: t.relation("parts"),
@@ -270,7 +270,7 @@ builder.queryField('instrumentType', (t) =>
   t.prismaField({
     type: 'InstrumentType',
     args: {
-      id: t.arg.string(),
+      id: t.arg.int(),
     },
     resolve: async (query, _parent, args, context) => (
       await ITServ.getById(context.userId, args.id, query)
@@ -363,7 +363,7 @@ builder.mutationField('addFeature', (t) =>
     args: {
       name: t.arg.string(),
       description: t.arg.string({
-        required: false,
+        //required: false,
         defaultValue: "",
       }),
     },
@@ -377,8 +377,8 @@ builder.mutationField('updateFeature', (t) =>
     type: 'Feature',
     args: {
       id: t.arg.int(),
-      name: t.arg.string({ required: false }),
-      description: t.arg.string({ required: false }),
+      name: t.arg.string({ defaultValue: undefined }),
+      description: t.arg.string({ defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) =>
       await FtServ.update(context.userId, args.id, args.name, args.description, query),
@@ -433,10 +433,10 @@ builder.mutationField('addPart', (t) =>
   t.prismaField({
     type: 'Part',
     args: {
-      description: t.arg.string({required: false, defaultValue: ""}),
+      description: t.arg.string({ defaultValue: "" }),
       name: t.arg.string(),
       type: t.arg.string(),
-      number: t.arg.int({required: false, defaultValue: 1}),
+      number: t.arg.int({ defaultValue: 1 }),
     },
     resolve: async (query, _parent, args, context) => 
       await PtServ.create(
@@ -454,9 +454,9 @@ builder.mutationField('updatePart', (t) =>
     type: 'Part',
     args: {
       id: t.arg.int(),
-      name: t.arg.string({required: false}),
-      description: t.arg.string({required: false}),
-      number: t.arg.int({required: false}),
+      name: t.arg.string({ defaultValue: undefined }),
+      description: t.arg.string({ defaultValue: undefined }),
+      number: t.arg.int({ defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) =>
       await PtServ.update(context.userId, args.id, args.name, args.description, args.number, query),
@@ -487,7 +487,7 @@ builder.queryField('partType', (t) =>
   t.prismaField({
     type: 'PartType',
     args: {
-      id: t.arg.string(),
+      id: t.arg.int(),
     },
     resolve: async (query, _parent, args, context) => (
       await PtTServ.getById(context.userId, args.id, query)
@@ -512,7 +512,7 @@ builder.mutationField('addPartType', (t) =>
     type: 'PartType',
     args: {
       name: t.arg.string(),
-      description: t.arg.string({required: false}),
+      description: t.arg.string({ defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) => 
       await PtTServ.create(context.userId, args.name, args.description, query),
@@ -524,8 +524,8 @@ builder.mutationField('updatePartType', (t) =>
     type: 'PartType',
     args: {
       id: t.arg.int(),
-      name: t.arg.string({required: false}),
-      description: t.arg.string({required: false}),
+      name: t.arg.string({ defaultValue: undefined }),
+      description: t.arg.string({ defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) =>
       await PtTServ.update(context.userId, args.id, args.name, args.description, query),
@@ -569,10 +569,10 @@ builder.mutationField('addMaintenance', (t) =>
     type: 'Maintenance',
     args: {
       type: t.arg.string(),
-      done: t.arg({ type: 'DateTime', required: false }),
-      due: t.arg({ type: 'DateTime', required: false }),
+      done: t.arg({ type: 'Date', required: false }),
+      due: t.arg({ type: 'Date', required: false }),
       instrument: t.arg.string(),
-      parts: t.arg.stringList({ required: false, defaultValue: [] }),
+      parts: t.arg.stringList({ defaultValue: [] }),
     },
     resolve: async (query, _parent, args, context) => 
       await MtServ.create(
@@ -591,9 +591,9 @@ builder.mutationField('updateMaintenance', (t) =>
     type: 'Maintenance',
     args: {
       id: t.arg.int(),
-      done: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
-      due: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
-      parts: t.arg.stringList({ required: false, defaultValue: undefined }),
+      done: t.arg({ type: 'Date', required: false, defaultValue: undefined }),
+      due: t.arg({ type: 'Date', required: false, defaultValue: undefined }),
+      parts: t.arg.stringList({ defaultValue: [] }),
     },
     resolve: async (query, _parent, args, context) =>
       await MtServ.update(context.userId, args.id, args.done, args.due, args.parts, query),
@@ -624,7 +624,7 @@ builder.queryField('maintenanceType', (t) =>
   t.prismaField({
     type: 'MaintenanceType',
     args: {
-      id: t.arg.string(),
+      id: t.arg.int(),
     },
     resolve: async (query, _parent, args, context) => (
       await MtTServ.getById(context.userId, args.id, query)
@@ -649,8 +649,8 @@ builder.mutationField('addMaintenanceType', (t) =>
     type: 'MaintenanceType',
     args: {
       name: t.arg.string(),
-      description: t.arg.string({required: false}),
-      schedule: t.arg({ type: 'DateTime', required: false }),
+      description: t.arg.string({ defaultValue: "" }),
+      schedule: t.arg({ type: 'Date', required: false }),
       feature: t.arg.string(),
     },
     resolve: async (query, _parent, args, context) => 
@@ -663,9 +663,9 @@ builder.mutationField('updateMaintenanceType', (t) =>
     type: 'MaintenanceType',
     args: {
       id: t.arg.int(),
-      name: t.arg.string({required: false, defaultValue: undefined }),
-      description: t.arg.string({required: false, defaultValue: undefined }),
-      schedule: t.arg({ type: 'DateTime', required: false, defaultValue: undefined }),
+      name: t.arg.string({ defaultValue: undefined }),
+      description: t.arg.string({ defaultValue: undefined }),
+      schedule: t.arg({ type: 'Date', required: false, defaultValue: undefined }),
     },
     resolve: async (query, _parent, args, context) =>
       await MtTServ.update(context.userId, args.id, args.name, args.description, args.schedule, query),

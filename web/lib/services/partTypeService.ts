@@ -57,8 +57,8 @@ export async function create(userId: string, name: string, description: string, 
 export async function update(
   userId: string, 
   typeId: number, 
-  name: string | null,
-  description: string | null,
+  name: string | undefined,
+  description: string | undefined,
   query: object): Promise<PartType> {
   
   return await prisma.partType.update({
