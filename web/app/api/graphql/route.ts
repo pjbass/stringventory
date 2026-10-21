@@ -243,9 +243,10 @@ builder.mutationField('updateInstrument', (t) =>
       id: t.arg.int(),
       name: t.arg.string({ defaultValue: undefined }),
       purchased: t.arg({ type: 'Date', defaultValue: undefined }),
+      features: t.arg.stringList({ defaultValue: [] }),
     },
     resolve: async (query, _parent, args, context) =>
-      await InsServ.update(context.userId, args.id, args.name, args.purchased, query),
+      await InsServ.update(context.userId, args.id, args.name, args.purchased, args.features, query),
   })
 );
 

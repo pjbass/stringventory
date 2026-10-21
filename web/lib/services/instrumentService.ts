@@ -106,8 +106,40 @@ export async function update(
   insId: number, 
   name: string | undefined,
   purchased: Date | undefined,
+  features: string[],
   query: object): Promise<Instrument> {
   
+  const owner = { connect: { id: userId } };
+  
+  // This one is for existing features...
+  const conF = [];
+  
+  // This one is for new features to create at the same time.
+  const nF = [];
+  
+  for (const f of features) {
+    const ft = await prisma.feature.findFirst({
+      where: {
+        ownerId: userId,
+        name: f,
+      },
+    });
+
+    if (ft) {
+      conF.push({id: ft.id});
+    } else {
+      nF.push({name: f, description: "", owner});
+    }
+  }
+  
+  // Having this set to undefined rather than empty arrays should keep
+  // old features from being overridden when the features array is
+  // empty.
+  const ft = features ? {
+    connect: conF,
+    create: nF,
+  } : undefined;
+    
   return await prisma.instrument.update({
     ...query,
     where: {
@@ -117,6 +149,7 @@ export async function update(
     data: {
       name,
       purchased,
+      features: ft,
     }
   });
   
